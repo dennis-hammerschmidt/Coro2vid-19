@@ -1,0 +1,25 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+# Load packages
+```{r}
+## Save package names as a vector of strings
+pkgs <-
+  c(
+    "utils",
+    "tidyverse"
+  )
+
+## Install uninstalled packages
+lapply(pkgs[!(pkgs %in% installed.packages())], install.packages)
+
+## Load all packages to library and adjust options
+lapply(pkgs, library, character.only = TRUE)
+```
+
+# Load data
+```{r}
+dat <- read.csv("../data/all_sources_metadata_2020-03-13.csv")
+```
