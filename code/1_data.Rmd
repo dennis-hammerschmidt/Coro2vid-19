@@ -33,3 +33,13 @@ dat_red <- dat %>%
   filter(abstract != "")
 ```
 
+## Text Preprocessing
+
+```{r}
+# add a unique row identifier
+dat_red %<>% dplyr::mutate(ID = row_number())
+
+dat_red <- dat_red %>% 
+  select(abstract, title, doi, authors, journal, publish_time)
+```
+
