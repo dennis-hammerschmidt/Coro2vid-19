@@ -1,0 +1,35 @@
+---
+title: "Data preparation"
+output: html_document
+---
+
+# Load packages
+```{r}
+## Save package names as a vector of strings
+pkgs <-
+  c(
+    "utils",
+    "tidyverse",
+    "feather"
+  )
+
+## Install uninstalled packages
+lapply(pkgs[!(pkgs %in% installed.packages())], install.packages)
+
+## Load all packages to library and adjust options
+lapply(pkgs, library, character.only = TRUE)
+```
+
+# Load data
+```{r}
+dat <- read.csv("~/Downloads/all_sources_metadata_2020-03-13.csv")
+# write_feather(dat, "~/Downloads/dat.feather")
+# df <- read_feather("../dat.feather")
+```
+
+Only keep those rows with abstracts
+```{r}
+dat_red <- dat %>% 
+  filter(abstract != "")
+```
+
