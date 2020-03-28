@@ -5,12 +5,16 @@ output: html_document
 
 # Load packages
 ```{r}
+
+#rm(ls())
+
 ## Save package names as a vector of strings
 pkgs <-
   c(
     "utils",
     "tidyverse",
-    "feather"
+    "magrittr",
+    "stringr"
   )
 
 ## Install uninstalled packages
@@ -36,10 +40,67 @@ dat_red <- dat %>%
 ## Text Preprocessing
 
 ```{r}
-# add a unique row identifier
-dat_red %<>% dplyr::mutate(ID = row_number())
-
-dat_red <- dat_red %>% 
+# reduce it to relevant variables
+dat_red %<>% 
   select(abstract, title, doi, authors, journal, publish_time)
+```
+
+Add abstract where missing
+```{r}
+dat_red$doi <- as.character(dat_red$doi)
+dat_red$abstract <- as.character(dat_red$abstract)
+
+dat_red$abstract[dat_red$doi=="http://dx.doi.org/10.1016/j.abb.2016.10.008"] <- "USP17 is a deubiquitinating enzyme that is upregulated in numerous cancers and therefore a drug target. We developed a robust expression, purification, and assay system for USP17 enabling its enzymatic and structural characterization. USP17 was expressed in E. coli as inclusion bodies and then solubilized, refolded, and purified using affinity and size-exclusion chromatography. Milligram quantities of pure USP17 can be produced that is catalytically more efficient (kcat/Km = 1500 (x103) M−1sec−1) than other human USPs studied to date. Analytical size-exclusion chromatography, analytical ultracentrifugation, and dynamic light scattering studies suggest that the quaternary structure of USP17 is a monomer. Steady-state kinetic studies show that USP17 efficiently hydrolyzes both ubiquitin-AMC (kcat = 1.5 sec−1 and Km = 1.0 μM) and ubiquitin-rhodamine110 (kcat = 1.8 sec−1 and Km = 2.0 μM) substrates. Ubiquitin chain cleavage assays reveal that USP17 efficiently cleaves di-ubiquitin chains with Lys11, Lys33, Lys48 and Lys63 linkages and tetra-ubiquitin chains with Lys11, Lys48 and Lys63 linkages but is inefficient in cleaving di-ubiquitin chains with Lys6, Lys27, or Lys29 linkages or linear ubiquitin chains. The substrate specificity of USP17 is most similar to that of USP1, where both USPs display higher specificity than other characterized members of the USP family."
+
+# This article does not provide an abstract -- we thus used the introduction here.
+dat_red$abstract[dat_red$doi=="http://dx.doi.org/10.1021/cr4006318"] <- "Mammals have complex biological systems and are constantly prone to infections by a wide array of bacteria, fungi, viruses, and parasites, a significant challenge to the constant development of disease-strains resistance to current drugs. As a result, there is always a need to identify new anti-infective agents against these organisms. An anti-infective agent is defined by Webster as “an agent capable of acting against an infection, by inhibiting the spread of an infectious agent or by killing the infectious agent outright”. Some of the emerging and drug-resistant infectious diseases having research priority are human immunodeficiency virus (HIV) or AIDS, hepatitis B and C viruses, respiratory infections such as influenza and respiratory syncytial virus (RSV), and dengue fever. Figures 1 and 2 provide us with the data in regards to the mortality and incidence rates, respectively, of people with viral diseases. Search engines utilized to identify the literature reviewed here include Google scholar, Scifinder, Pubmed, government documents from the CDC, NIH, and the World Health Organization (WHO), academic journals, and books."
+
+#dat_red$abstract[dat_red$doi=="10.3346/jkms.2020.35.e56"] <- as.character("Have you ever put on a level-D protective clothing? Various papers and textbooks plainly describe wearing level-D protective clothing against respiratory viruses, but in practice this is not a simple task. It takes at least five minutes to wear it. If you try to see the patient after wearing, it is very difficult to communicate. With the N95 respirator, basic conversation is not easy. Physical examination is also difficult to conduct. For example, can you properly auscultate a patient while wearing such heavy personal protective equipment (PPE)? Moreover, if you are wearing this heavy PPE in the summer, the heat and stuffiness are really unbearable. When suspected of novel coronavirus infection (2019-nCoV), another ordeal is encountered when a telephone call is made with the community health center to discuss patient transfer. At first it is not connected well because telephone call to public health center is congested. Even with the connection, the voice over there is hard to hear. And because of wearing gloves, the phone keyboard touch is not good. Sometimes the decision of the public health center is inconsistent with ours, resulting in disagreements or conflicts. Doffing (taking off) the level-D protective clothing is more difficult than donning (putting on). Each time you take off one PPE, you will need to do a hand hygiene. So doffing takes at least 10 minutes. Some patients show an aggressive attitude, making the medical personnel frustrated. This is a real situation. During the MERS-CoV disaster in 2015, we already experienced to know this fact. When a newly emerging infectious disease outbreak occurs, the situation does not proceed normally. Standard guidelines are established and enforced, but the people never act rationally. This dealing with epidemic is actually a series of hardships. Now, let's go over the current situation. Eventually, the third plague in the 21st century struck the world. In December 2019, an outbreak of pneumonia of unknown origin began in Wuhan, China. The causative pathogen was identified as a new species of coronavirus similar to SARS-CoV. It was originally called Wuhan virus at the beginning, but is later officially named 2019-nCoV. This virus is a positive sense single stranded RNA virus belonging to the family Coronaviridae. Most coronaviruses cause only mild upper respiratory infections, but sometimes they cause fatal respiratory disease and outbreaks, as experienced in cases of SARS-CoV or MERS-CoV. This disaster has been warned until recently that new mutants of coronavirus can occur anytime.5, 6 The emergence of these mutants is caused by species jumping between human and other animals. Therefore, it is likely to occur in an environment where human and animals are in close contact. The current outbreak is also suspected of being caused by mutants from species spillover in Wuhan's wild animal market. The 2019-nCoV is rapidly spreading throughout China and around the world in a relatively short period of time. As of 29 January 2020, a total of 6,140 cases were confirmed in 19 countries, including Korea, of which 132 died (in China only) and had a mortality of 2.1%. As much as the 2015 MERS-CoV outbreak, we are also learning a lot lesson from this disaster. Because epidemic is a national disaster, not only medical institutions but also governments have to be active. Hence, honesty and transparency are, above all, the virtues that governments should have. Our country is excellent at coping with this disaster, thanks to the experiences that we have gained during the 2015 MERS-CoV outbreak. Our defense system is at least more thorough and faster than it used to be. What do you expect this nCoV outbreak to be in the future? Based on the SARS epidemic precedence, the outbreak is expected to last at least three months. And this outbreak is expected to have a greater amount of transmission than the 2015 MERS-CoV. Recently, the possibility of transmission by asymptomatic infected people has also been raised carefully although its evidence is unclear. Therefore, we should also prepare for the spread to communities by asymptomatic infections. After the MERS-CoV outbreak in 2015, there was a self-tormenting expression in the medical profession society: 'Patients die, hospitals die, and civil servants are praised.' But the bad memories of the past should never be repeated. In fact, at present, cooperation between community health centers and private hospitals is not always harmonious. The government needs to be more active, not just to leave everything to the medical staffs. After all, the responsibility for the controlling nationwide epidemics lies with health authorities of the government. The Korea Center for Disease Control and Prevention (KCDC) must be the control tower of the present disaster in Korea and all other central or local governmental organizations must cooperate with the KCDC. Toward the end of the 2019-nCoV outbreak we must go on a march of arduousness. Health workers, the government, and the people will need to unite to overcome this disaster.")
+
+```
+
+
+Get rid of words in the abstract
+```{r}
+stopword_list <- c("ABSTRACT:",
+                   "BACKGROUND:",
+                   "KEY MESSAGE:",
+                   "[Image: see text]",
+                   "&lt;p&gt;&lt;b&gt;Objective&lt;/b&gt;",
+                   "ABSTRACT",
+                   "SUMMARY:",
+                   "[Table: see text]",
+                   "SIMPLE SUMMARY:",
+                   "BACKGROUD:",
+                   )
+# dat_red %<>%
+#   mutate(
+#     abstract2 = str_replace(abstract, "ABSTRACT:", ""),
+#     abstract2 = str_replace(abstract2, "BACKGROUND:", ""),
+#     abstract2 = str_replace(abstract2, "KEY MESSAGE:", ""),
+#     abstract2 = str_replace(abstract2, "[Image: see text]", ""),
+#     abstract2 = str_replace(abstract2, "ABSTRACT", ""),
+#     abstract2 = str_replace(abstract2, "SUMMARY:", ""),
+#     abstract2 = str_replace(abstract2, "[Table: see text]", ""),
+#     abstract2 = str_replace(abstract2, "SIMPLE SUMMARY:", "")
+#   )
+
+```
+
+Group/Aggregate to get rid of duplicates in observations
+```{r}
+dat_agg <- dat_red %>% 
+  group_by(title, abstract) %>% 
+  summarise(doi = first(doi),
+            authors = first(authors),
+            journal = first(journal),
+            publish_time = first(publish_time))
+  
+```
+ 
+
+```{r}
+# add a unique row identifier to the remaining observations
+dat_agg %<>% dplyr::mutate(ID = row_number())
 ```
 
