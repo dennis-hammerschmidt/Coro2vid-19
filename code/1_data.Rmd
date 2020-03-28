@@ -9,7 +9,8 @@ output: html_document
 pkgs <-
   c(
     "utils",
-    "tidyverse"
+    "tidyverse",
+    "feather"
   )
 
 ## Install uninstalled packages
@@ -21,5 +22,8 @@ lapply(pkgs, library, character.only = TRUE)
 
 # Load data
 ```{r}
-dat <- read.csv("../data/all_sources_metadata_2020-03-13.csv")
+dat <- read.csv("~/Downloads/all_sources_metadata_2020-03-13.csv")
+# write_feather(dat, "~/Downloads/dat.feather")
+# df <- read_feather("../dat.feather")
+
 ```
