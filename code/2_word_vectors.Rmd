@@ -1,0 +1,250 @@
+---
+title: "vector spaces"
+output: html_document
+---
+
+# Load packages
+```{r}
+## Save package names as a vector of strings
+pkgs <-
+  c(
+    "quanteda",
+    "textTinyR",
+    "ClusterR"
+  )
+
+## Install uninstalled packages
+lapply(pkgs[!(pkgs %in% installed.packages())], install.packages)
+
+## Load all packages to library and adjust options
+lapply(pkgs, library, character.only = TRUE)
+```
+
+## Text Preprocessing
+
+```{r}
+dat_corpus <- corpus(dat_agg, text_field = "abstract") 
+
+dat_tokens <- quanteda::tokens(
+  dat_corpus,
+  remove_punct = TRUE,
+  remove_symbols = TRUE,
+  remove_numbers = TRUE,
+  remove_separators = TRUE,
+  remove_url = TRUE,
+  split_hyphens = TRUE,
+  include_docvars = TRUE,
+  verbose = TRUE,
+)
+
+dat_tokens <- quanteda::tokens_remove(dat_tokens, stopword_list)
+```
+
+# Extract word embeddings using word2vec
+
+```{r keras_tf_first_time, message = FALSE}
+devtools::install_github("rstudio/keras")
+library(keras)
+install_keras()
+```
+
+
+```{r preprocess_tokens}
+tokens_data <- as.list(dat_tokens)
+tokens_data <- lapply(tokens_data, function(x) stringr::str_c(x, collapse = " "))
+
+tokens_data2 <- as.data.frame(tokens_data)
+tokens_data3 <- tokens_data2 %>% 
+  tidyr::gather(identifier, text, text1:text22463)
+
+tokenizer <- text_tokenizer(num_words = 50000, lower = TRUE)
+tokenizer %>% fit_text_tokenizer(tokens_data3$text)
+```
+
+
+```{r skipgram_model}
+skipgrams_generator <- function(text, tokenizer, window_size, negative_samples) {
+  gen <- texts_to_sequences_generator(tokenizer, sample(text))
+  function() {
+    skip <- generator_next(gen) %>%
+      skipgrams(
+        vocabulary_size = tokenizer$num_words, 
+        window_size = window_size, 
+        negative_samples = 1
+      )
+    x <- transpose(skip$couples) %>% map(. %>% unlist %>% as.matrix(ncol = 1))
+    y <- skip$labels %>% as.matrix(ncol = 1)
+    list(x, y)
+  }
+}
+```
+
+
+```{r hyperparameter_word2vec, message = FALSE}
+embedding_size <- 100    # Dimension of the embedding vector.
+skip_window <- 10        # How many words to consider left and right.
+num_sampled <- 1        # Number of negative examples to sample for each word.
+
+# define placeholders for the input
+input_target <- layer_input(shape = 1)
+input_context <- layer_input(shape = 1)
+
+# the embedding matrix is a quasi-lookup table for the word vectors
+# The embedding acts as lookup table for the word vectors with dimensions (vocabulary, embedding_size).
+embedding <- layer_embedding(
+  input_dim = tokenizer$num_words + 1, 
+  output_dim = embedding_size, 
+  input_length = 1, 
+  name = "embedding"
+)
+
+target_vector <- input_target %>% 
+  embedding() %>% 
+  layer_flatten()
+
+context_vector <- input_context %>%
+  embedding() %>%
+  layer_flatten()
+
+# use basic cosine similarity to estimate the similarity of the target_vector and the context_vector
+dot_product <- layer_dot(list(target_vector, context_vector), axes = 1)
+# use this to output a dense layer with sigmoid activation
+output <- layer_dense(dot_product, units = 1, activation = "sigmoid")
+```
+
+
+```{r keras_model}
+model <- keras_model(list(input_target, input_context), output)
+model %>% compile(loss = "binary_crossentropy", optimizer = "adam")
+summary(model)
+```
+
+
+```{r keras_model_train}
+# train the model on the data
+model %>%
+  fit_generator(
+    skipgrams_generator(tokens_data3$text, tokenizer, skip_window, negative_samples), 
+    steps_per_epoch = 2000, epochs = 5
+    )
+```
+
+
+```{r w2v_embeddings}
+# extract the weights from the model
+embedding_matrix <- get_weights(model)[[1]]
+
+# extract words
+words <- data_frame(
+  word = names(tokenizer$word_index), 
+  id = as.integer(unlist(tokenizer$word_index))
+)
+
+words <- words %>%
+  filter(id <= tokenizer$num_words) %>%
+  arrange(id)
+
+row.names(embedding_matrix) <- c("UNK", words$word) # specifying those embeddings that are unknown, i.e., that we don't have an embedding for
+
+# save as word2vec .txt file without the first row of unkowns
+embedding_matrix2 <- embedding_matrix[-1, ]
+
+dir.create("processed-data")
+
+write.table(
+  embedding_matrix2,
+  file = "w2v_embeddings_100.txt",
+  row.names = TRUE, # keep the row names
+  col.names = FALSE, # but remove the column names
+  quote = FALSE # make sure this is set to FALSE so that tokens (words) are not wrapped in quotation marks -- doc2vec     from textinyR cannot handle this
+)
+```
+
+
+## doc2vec
+
+
+```{r}
+# ensure that the tokens are lower-case and stored in a list
+tokens_lower <- tokens_tolower(dat_tokens)
+tokens_d2v <- as.list(tokens_lower)
+
+# intialize a new doc2vec object using the embedding matrix from word2vec
+init <- textTinyR::Doc2Vec$new(token_list = tokens_d2v, 
+                              word_vector_FILE = "w2v_embeddings_100.txt",
+                              print_every_rows = 5000, 
+                              verbose = TRUE, 
+                              copy_data = TRUE # if embedding matrix is large, set to FALSE for memory efficiency
+                              )  
+
+# inspect the stored embedding matrix (to ensure it returns non-zero entries) when copy_data = TRUE
+res_wv <- init$pre_processed_wv()                           
+str(res_wv)
+
+# run the doc2vec model using min_max_norm or sum_sqrt
+doc2_minmax <- init$doc2vec_methods(method = "min_max_norm", threads = 6)
+
+# check the dimensions - should be NUMBER-OF-DOCUMENTS x NUMBER-OF-WORD-VECTORS
+dim(doc2_minmax)
+
+# replace rownames with XXX
+rownames(doc2_minmax) <- UNGD_raw$doc_id
+```
+
+
+
+```{r find_similar_documents}
+# define a function to identify the top N similar documents using cosine similarity
+find_similar_doc <- function(doc_num, embedding_matrix, n) {
+  similarities <- embedding_matrix[doc_num, , drop = FALSE] %>%
+    sim2(embedding_matrix, y = ., method = "cosine")
+  
+  similarities[,1] %>% sort(decreasing = TRUE) %>% head(n)
+}
+
+find_similar_doc("BOL_1990", doc2_minmax, 5)
+```
+
+
+```{r ClusterR_optimal_number}
+# center and scale the doc2vec matrix
+scal_dat <- ClusterR::center_scale(doc2_minmax)
+
+# run the k-means optimal cluster algorithm to identify the optimal number of clusters 
+opt_cl <- ClusterR::Optimal_Clusters_KMeans(scal_dat, max_clusters = 15, 
+                                           criterion = "distortion_fK",
+                                           fK_threshold = 0.85, num_init = 3, 
+                                           max_iters = 50,
+                                           initializer = "kmeans++", tol = 1e-04, 
+                                           plot_clusters = TRUE,
+                                           verbose = T, tol_optimal_init = 0.3, 
+                                           seed = 1)
+```
+
+```{r kmeans_cluster}
+# select optimal number of clusters from opt_cl output
+num_clust <- 7 
+
+# run k-means clustering
+km <- ClusterR::KMeans_rcpp(scal_dat, clusters = num_clust, num_init = 3, max_iters = 50,
+                           initializer = "kmeans++", fuzzy = T, verbose = F,
+                           CENTROIDS = NULL, tol = 1e-04, tol_optimal_init = 0.3, seed = 2)
+# inspect the output
+table(km$clusters)
+
+# show the frequency of words for each cluster
+freq_clust <- textTinyR::cluster_frequency(tokenized_list_text = UNGD_list, 
+                                          cluster_vector = km$clusters, verbose = T)
+freq_clust
+```
+
+
+
+
+
+
+
+
+
+
+

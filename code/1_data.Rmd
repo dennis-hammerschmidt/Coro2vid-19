@@ -48,6 +48,7 @@ dat_red %<>%
 Add abstract where missing
 ```{r}
 dat_red$doi <- as.character(dat_red$doi)
+dat_red$title <- as.character(dat_red$title)
 dat_red$abstract <- as.character(dat_red$abstract)
 
 dat_red$abstract[dat_red$doi=="http://dx.doi.org/10.1016/j.abb.2016.10.008"] <- "USP17 is a deubiquitinating enzyme that is upregulated in numerous cancers and therefore a drug target. We developed a robust expression, purification, and assay system for USP17 enabling its enzymatic and structural characterization. USP17 was expressed in E. coli as inclusion bodies and then solubilized, refolded, and purified using affinity and size-exclusion chromatography. Milligram quantities of pure USP17 can be produced that is catalytically more efficient (kcat/Km = 1500 (x103) M−1sec−1) than other human USPs studied to date. Analytical size-exclusion chromatography, analytical ultracentrifugation, and dynamic light scattering studies suggest that the quaternary structure of USP17 is a monomer. Steady-state kinetic studies show that USP17 efficiently hydrolyzes both ubiquitin-AMC (kcat = 1.5 sec−1 and Km = 1.0 μM) and ubiquitin-rhodamine110 (kcat = 1.8 sec−1 and Km = 2.0 μM) substrates. Ubiquitin chain cleavage assays reveal that USP17 efficiently cleaves di-ubiquitin chains with Lys11, Lys33, Lys48 and Lys63 linkages and tetra-ubiquitin chains with Lys11, Lys48 and Lys63 linkages but is inefficient in cleaving di-ubiquitin chains with Lys6, Lys27, or Lys29 linkages or linear ubiquitin chains. The substrate specificity of USP17 is most similar to that of USP1, where both USPs display higher specificity than other characterized members of the USP family."
@@ -63,7 +64,7 @@ dat_red$abstract[dat_red$doi=="http://dx.doi.org/10.1021/cr4006318"] <- "Mammals
 Get rid of words in the abstract
 ```{r}
 stopword_list <- c("ABSTRACT:",
-                   "BACKGROUND:",
+                   "BACKGROUND",
                    "KEY MESSAGE:",
                    "[Image: see text]",
                    "&lt;p&gt;&lt;b&gt;Objective&lt;/b&gt;",
@@ -71,7 +72,10 @@ stopword_list <- c("ABSTRACT:",
                    "SUMMARY:",
                    "[Table: see text]",
                    "SIMPLE SUMMARY:",
-                   "BACKGROUD:",
+                   "INTRODUCTION",
+                   "PURPOSE",
+                   "OBJECTIVES",
+                   "Objective"
                    )
 # dat_red %<>%
 #   mutate(
