@@ -25,5 +25,11 @@ lapply(pkgs, library, character.only = TRUE)
 dat <- read.csv("~/Downloads/all_sources_metadata_2020-03-13.csv")
 # write_feather(dat, "~/Downloads/dat.feather")
 # df <- read_feather("../dat.feather")
-
 ```
+
+Only keep those rows with abstracts
+```{r}
+dat_red <- dat %>% 
+  filter(abstract != "")
+```
+
