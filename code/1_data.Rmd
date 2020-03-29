@@ -104,7 +104,6 @@ dat_agg <- dat_red %>%
             publish_time = first(publish_time))
   
 ```
- 
 
 ```{r}
 # add a unique row identifier to the remaining observations
@@ -122,7 +121,6 @@ dat_agg2 <- dat_red %>%
             abstract = first(abstract),
             title = first(title))
 ```
-
 
 ```{r}
 # add a unique row identifier to the remaining observations
