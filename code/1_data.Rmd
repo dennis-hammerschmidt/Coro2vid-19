@@ -105,6 +105,6 @@ dat_agg <- dat_red %>%
 
 ```{r}
 # add a unique row identifier to the remaining observations
-dat_agg %<>% dplyr::mutate(ID = row_number())
+dat_agg$ID <- seq.int(nrow(dat_agg))
 ```
 

@@ -10,7 +10,8 @@ pkgs <-
   c(
     "quanteda",
     "textTinyR",
-    "ClusterR"
+    "ClusterR",
+    "text2vec"
   )
 
 ## Install uninstalled packages
@@ -174,7 +175,7 @@ init <- textTinyR::Doc2Vec$new(token_list = tokens_d2v,
                               word_vector_FILE = "w2v_embeddings_100.txt",
                               print_every_rows = 5000, 
                               verbose = TRUE, 
-                              copy_data = TRUE # if embedding matrix is large, set to FALSE for memory efficiency
+                              copy_data = FALSE # if embedding matrix is large, set to FALSE for memory efficiency
                               )  
 
 # inspect the stored embedding matrix (to ensure it returns non-zero entries) when copy_data = TRUE
@@ -188,21 +189,21 @@ doc2_minmax <- init$doc2vec_methods(method = "min_max_norm", threads = 6)
 dim(doc2_minmax)
 
 # replace rownames with XXX
-rownames(doc2_minmax) <- UNGD_raw$doc_id
+names <- paste0("text", seq(1:length(tokens_d2v)))
+rownames(doc2_minmax) <- names
 ```
-
 
 
 ```{r find_similar_documents}
 # define a function to identify the top N similar documents using cosine similarity
-find_similar_doc <- function(doc_num, embedding_matrix, n) {
-  similarities <- embedding_matrix[doc_num, , drop = FALSE] %>%
-    sim2(embedding_matrix, y = ., method = "cosine")
+find_similar_doc <- function(names, embedding_matrix, n) {
+  similarities <- embedding_matrix[names, , drop = FALSE] %>%
+    text2vec::sim2(embedding_matrix, y = ., method = "cosine")
   
   similarities[,1] %>% sort(decreasing = TRUE) %>% head(n)
 }
 
-find_similar_doc("BOL_1990", doc2_minmax, 5)
+find_similar_doc("text4", doc2_minmax, 5)
 ```
 
 
