@@ -14,7 +14,8 @@ pkgs <-
     "utils",
     "tidyverse",
     "magrittr",
-    "stringr"
+    "stringr",
+    "data.table"
   )
 
 ## Install uninstalled packages
@@ -29,6 +30,8 @@ lapply(pkgs, library, character.only = TRUE)
 dat <- read.csv("~/Downloads/all_sources_metadata_2020-03-13.csv")
 # write_feather(dat, "~/Downloads/dat.feather")
 # df <- read_feather("../dat.feather")
+
+dat <- read.csv(url("https://www.dropbox.com/s/mraycbyt2sxopf7/all_sources_metadata_2020-03-13.csv?dl=0")) 
 ```
 
 Only keep those rows with abstracts
@@ -108,3 +111,20 @@ dat_agg <- dat_red %>%
 dat_agg$ID <- seq.int(nrow(dat_agg))
 ```
 
+
+Group/Aggregate on an authors-level
+```{r}
+dat_agg2 <- dat_red %>% 
+  group_by(authors) %>% 
+  summarise(doi = first(doi),
+            journal = first(journal),
+            publish_time = first(publish_time),
+            abstract = first(abstract),
+            title = first(title))
+```
+
+
+```{r}
+# add a unique row identifier to the remaining observations
+dat_agg2$ID <- seq.int(nrow(dat_agg2))
+```
