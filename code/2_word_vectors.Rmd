@@ -4,7 +4,7 @@ output: html_document
 ---
 
 # Load packages
-```{r}
+```{r, echo = FALSE}
 ## Save package names as a vector of strings
 pkgs <-
   c(
@@ -164,6 +164,23 @@ write.table(
 
 ## doc2vec
 
+```{r}
+# !!! if embedding matrix needs to be loaded again !!!
+
+# read in the .txt file with embeddings
+embedding_matrix2 <-
+  read.delim("code/w2v_embeddings_100.txt",
+             sep = " ",
+             header = FALSE)
+
+# set the first column (tokens) to row names
+embedding_matrix2 <-
+  embedding_matrix2 %>% remove_rownames %>% column_to_rownames(var = "V1")
+
+# replace V2:V101 column names with V1:V100
+names <- paste0("V", seq(1:length(embedding_matrix2)))
+colnames(embedding_matrix2) <- names
+```
 
 ```{r}
 # ensure that the tokens are lower-case and stored in a list
@@ -189,15 +206,15 @@ doc2_minmax <- init$doc2vec_methods(method = "min_max_norm", threads = 6)
 dim(doc2_minmax)
 
 # replace rownames with XXX
-names <- paste0("text", seq(1:length(tokens_d2v)))
-rownames(doc2_minmax) <- names
+rownames(doc2_minmax) <- tokens_data3$identifier
 ```
 
 
 ```{r find_similar_documents}
+doc_names <- tokens_data3$identifier
 # define a function to identify the top N similar documents using cosine similarity
-find_similar_doc <- function(names, embedding_matrix, n) {
-  similarities <- embedding_matrix[names, , drop = FALSE] %>%
+find_similar_doc <- function(doc_names, embedding_matrix, n) {
+  similarities <- embedding_matrix[doc_names, , drop = FALSE] %>%
     text2vec::sim2(embedding_matrix, y = ., method = "cosine")
   
   similarities[,1] %>% sort(decreasing = TRUE) %>% head(n)
