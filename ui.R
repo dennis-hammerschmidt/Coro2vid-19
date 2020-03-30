@@ -120,7 +120,9 @@ navbarPage("Coro2vid-19",
                                 #sliderInput("slider_sim_hist_year", label = "year", min = 1890,
                                 #           max = 2015, value = c(1890,2015), step=1)
                       )
-                    )
+                    ),
+                    hr(),
+                    print("Based on the SemanticLibrarian")
            ),
            
            tabPanel("Find similar articles",
