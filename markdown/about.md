@@ -1,5 +1,5 @@
 # Coro2vid-19
-## Levering knowledge about coronaviruses to fight Covid-19
+## Leveraging knowledge about coronaviruses to fight Covid-19
 
 Coro2vid-19 is a search enginge that uses academic articles related to **coronavirus**. Our goal is to help users to quickly identify relevant articles on a specific topic using keyword searches as well as to identify related articles and groups of authors. We use the abstract of over 22,000 articles related to coronavirus covering the period from 1955-2020 from [Kaggle](https://www.kaggle.com/allen-institute-for-ai/CORD-19-research-challenge) to find similarities in their content and to construct a ShinyApp. This way, users can explore which articles are most similart to each other. With this ShinyApp, we hope that users can quickly browse through relevant articles and find what they need in order to learn more about the Covid-19 virus.
 
