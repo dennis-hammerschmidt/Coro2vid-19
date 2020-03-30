@@ -1,0 +1,126 @@
+---
+title: "Clean data for the ShinyApp"
+output: html_document
+---
+
+```{r}
+## Save package names as a vector of strings
+pkgs <-
+  c(
+    "data.table",
+    "tidyverse",
+    "magrittr",
+    "stringr",
+    "tidylog"
+  )
+
+## Install uninstalled packages
+lapply(pkgs[!(pkgs %in% installed.packages())], install.packages)
+
+## Load all packages to library and adjust options
+lapply(pkgs, library, character.only = TRUE)
+```
+
+# Load data
+```{r}
+# Read in data
+
+load("~/Downloads/doc2_minmax.RData") 
+article_vectors <- as.data.frame(doc2_minmax)
+
+load("~/Downloads/dat_agg.RData")   
+#article_df <- as.matrix(dat_agg)
+article_df <- as.data.frame(dat_agg)
+
+load("~/Downloads/author2_minmax.RData")
+AuthorVectors <- author2_minmax # as.data.frame(author2_minmax)
+
+# read in the .txt file with embeddings
+WordVectors <-
+  read.delim("~/Downloads/w2v_embeddings_100.txt",
+             sep = " ",
+             header = FALSE)
+
+# set the first column (tokens) to row names
+WordVectors <-
+  WordVectors %>% remove_rownames %>% column_to_rownames(var = "V1")
+
+# replace V2:V101 column names with V1:V100
+names <- paste0("V", seq(1:length(WordVectors)))
+colnames(WordVectors) <- names
+
+WordVectors <- as.matrix(WordVectors)
+
+# Remove unnecessary objects
+rm(doc2_minmax, dat_agg, author2_minmax, names)
+```
+
+# Preprocess data
+```{r}
+article_vectors <- as.matrix(article_vectors)
+article_vectors[is.na(article_vectors)] <- 0
+AuthorVectors <- as.matrix(AuthorVectors)
+author_list <- row.names(AuthorVectors)
+
+formatted_column <- sapply(1:22463,function(x) paste(
+  c("<h4>",as.character(article_df[x,]$title),"</h4>",
+    "<p style='font-size:12px'>", as.character(article_df[x,]$authors), "</p>",
+    "<p style='font-size:11px'>", as.character(article_df[x,]$journal), ", ",
+    as.character(article_df[x,]$doi), # ",", as.character(article_df[x,]$pages),
+    "</p>",
+    "<p style='font-size:11px'>", as.character(article_df[x,]$abstract), "</p>"), collapse=""
+))
+
+article_df$formatted_column <- formatted_column
+
+# dictionary_words <- as.character(row.names(WordVectors))
+# load the function wrap_string
+wrap_string <- function(x) {paste(strwrap(x,50), collapse=" <br> ")}
+
+
+wrap_title<-c()
+for(i in 1:dim(article_df)[1]){
+  wrap_title[i] <- wrap_string(article_df$title[i])
+}
+
+wrap_title <- as.data.frame(wrap_title)
+article_df <- dplyr::bind_cols(article_df,wrap_title)
+
+article_df <- dplyr::bind_cols(article_df, index = 1:dim(article_df)[1])
+article_df$wrap_title <- as.character(article_df$wrap_title)
+
+# change year
+article_df %<>%
+  mutate(year = as.integer(substr(publish_time, start=1, stop=4)))
+
+article_df$index <- as.numeric(article_df$index)
+
+# clean data in article_df
+article_df <- article_df %>% 
+  mutate(title = stringr::str_replace(title, "AAAS", ""),
+         title = gsub("[][!#$*,.:;<=>@^_`|~.{}]", "", title),
+         abstract = stringr::str_replace(abstract, "BACKGROUND:", ""),
+         abstract = stringr::str_replace(abstract, "Background: ", ""),
+         abstract = stringr::str_replace(abstract, "PURPOSE: ", ""),
+         abstract = stringr::str_replace(abstract, "Aim: ", ""),
+         abstract = stringr::str_replace(abstract, "Objective: ", ""),
+         abstract = stringr::str_replace(abstract, "INTRODUCTION: ", ""),
+         abstract = stringr::str_replace(abstract, "BACKGROUD: ", ""),
+         abstract = stringr::str_replace(abstract, "OBJECTIVES: ", ""),
+         abstract = stringr::str_replace(abstract, "&lt;p&gt;&lt;b&gt;Objective&lt;/b&gt;", ""),
+         abstract = stringr::str_replace(abstract, "ABSTRACT: ", ""),
+         abstract = stringr::str_replace(abstract, "ABSTRACT", ""),
+     #    abstract = stringr::str_replace(abstract, "[Table:", ""),
+    #     abstract = stringr::str_replace(abstract, "text]", ""),
+      #   abstract = stringr::str_replace(abstract, "[Image:", ""),
+       #  abstract = stringr::str_replace(abstract, "text]", ""),
+         abstract = stringr::str_replace(abstract, "SIMPLE SUMMARY: ", ""),
+         abstract = stringr::str_replace(abstract, "SUMMARY: ", "")
+         )
+```
+
+# Save data
+```{r}
+save(list = ls(all.names = TRUE),file="data/corona_archive.RData")
+```
+
