@@ -1,3 +1,5 @@
+[![eRum2020::CovidR](https://badgen.net/https/runkit.io/erum2020-covidr/badge/branches/master/hammerschmidt-meyer-coro2vid-19?cache=300)](https://milano-r.github.io/erum2020-covidr-contest/hammerschmidt-meyer-coro2vid-19.html)
+
 # Coro2vid-19
 ## Leveraging knowledge about coronaviruses to fight Covid-19
 
@@ -5,7 +7,7 @@ Coro2vid-19 is a search engine that uses academic articles related to **coronavi
 
 The name Coro2vid-19 summarizes this goal: Using information from research on **coro**naviruses **2** helps us understand and fight the current Co**vid-19** virus. 
 
-This project was developed through and for the [codevscovid-19 hackathon organized](https://www.codevscovid19.org) by [HackZurich](https://digitalfestival.ch/en/HACK/). You can see all submissions for the hackathon on [Devpost](https://codevscovid19.devpost.com).
+This project was originally developed through and for the [codevscovid-19 hackathon organized](https://www.codevscovid19.org) by [HackZurich](https://digitalfestival.ch/en/HACK/). You can see all submissions for the hackathon on [Devpost](https://codevscovid19.devpost.com).
 
 ## How is the search engine working?
 
